@@ -7,8 +7,9 @@ import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 
-import {parseItem} from '../src/parse-mime'
-import * as tapTypes from './singer/tap-types'
+import * as mailparser from 'mailparser'
+//var mp = mailparser.MailParser; // low-level parser
+var sp = mailparser.simpleParser // higher-level parser (easier to use, not as efficient)
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject:Object, streamName: string) : any {
@@ -18,13 +19,13 @@ function createRecord(recordObject:Object, streamName: string) : any {
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-export function tapMime(configObj: tapTypes.allConfigs) {
+export function tapMime(mimeEmail:Buffer, configObj: any) {
   if (!configObj) configObj = {}
-  if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
+  //if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
 
   // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
-  const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
+const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
     const self = this
     let returnErr: any = null
     let parser:any
@@ -76,34 +77,34 @@ export function tapMime(configObj: tapTypes.allConfigs) {
       return cb(returnErr, file)
     }
     else if (file.isBuffer()) {
+      let parsed = await sp(mimeEmail)
 
-
-      parser(file.contents as Buffer, configObj, function(err:any, linesArray : []){
-        // this callback function runs when the parser finishes its work, returning an array parsed lines 
-        let tempLine: any
-        let resultArray = [];
-        // we'll call handleLine on each line
-        for (let dataIdx in linesArray) {
-          try {
-            let lineObj = linesArray[dataIdx]
-            tempLine = handleLine(lineObj, streamName)
-            if (tempLine){
-              let tempStr = JSON.stringify(tempLine)
-              log.debug(tempStr)
-              resultArray.push(tempStr);
-            }
-          } catch (err) {
-            returnErr = new PluginError(PLUGIN_NAME, err);
-          }
-        }
-        let data:string = resultArray.join('\n')
+      // parser(file.contents as Buffer, configObj, function(err:any, linesArray : []){
+      //   // this callback function runs when the parser finishes its work, returning an array parsed lines 
+      //   let tempLine: any
+      //   let resultArray = [];
+      //   // we'll call handleLine on each line
+      //   for (let dataIdx in linesArray) {
+      //     try {
+      //       let lineObj = linesArray[dataIdx]
+      //       tempLine = handleLine(lineObj, streamName)
+      //       if (tempLine){
+      //         let tempStr = JSON.stringify(tempLine)
+      //         log.debug(tempStr)
+      //         resultArray.push(tempStr);
+      //       }
+      //     } catch (err) {
+      //       returnErr = new PluginError(PLUGIN_NAME, err);
+      //     }
+      //   }
+      //   let data:string = resultArray.join('\n')
 
         file.contents = Buffer.from(data)
         
         // we are done with file processing. Pass the processed file along
         log.debug('calling callback')    
         cb(returnErr, file);    
-      })
+     //})
 
     }
     else if (file.isStream()) {
