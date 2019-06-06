@@ -19,31 +19,32 @@ function createRecord(recordObject:Object, streamName: string) : any {
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-export function tapMime(mimeEmail:Buffer, configObj: any) {
+export function tapMime(configObj: any) {
   if (!configObj) configObj = {}
   //if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
 
   // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
-const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
+const strm = through2.obj(
+  async function (this: any, file: Vinyl, encoding: string, cb: Function) {
     const self = this
     let returnErr: any = null
-    let parser:any
-    parser = parseItem(configObj)
+    // let parser:any
+    // parser = parseItem(configObj)
   
-    // post-process line object
-    const handleLine = (lineObj: any, _streamName : string): object | null => {
-      if (parser.options.raw || parser.options.info) {
-        let newObj = createRecord(lineObj.record, _streamName)
-        if (lineObj.raw) newObj.raw = lineObj.raw
-        if (lineObj.info) newObj.info = lineObj.info
-        lineObj = newObj
-      }
-      else {
-        lineObj = createRecord(lineObj, _streamName)
-      }
-      return lineObj
-    }
+    // // post-process line object
+    // const handleLine = (lineObj: any, _streamName : string): object | null => {
+    //   if (parser.options.raw || parser.options.info) {
+    //     let newObj = createRecord(lineObj.record, _streamName)
+    //     if (lineObj.raw) newObj.raw = lineObj.raw
+    //     if (lineObj.info) newObj.info = lineObj.info
+    //     lineObj = newObj
+    //   }
+    //   else {
+    //     lineObj = createRecord(lineObj, _streamName)
+    //   }
+    //   return lineObj
+    // }
 
     function newTransformer(streamName : string) {
 
@@ -53,7 +54,7 @@ const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb
       transformer._transform = function (dataObj: Object, encoding: string, callback: Function) {
         let returnErr: any = null
         try {
-          let handledObj = handleLine(dataObj, streamName)
+          let handledObj //= handleLine(dataObj, streamName)
           if (handledObj) {
             let handledLine = JSON.stringify(handledObj)
             log.debug(handledLine)
@@ -77,7 +78,7 @@ const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb
       return cb(returnErr, file)
     }
     else if (file.isBuffer()) {
-      let parsed = await sp(mimeEmail)
+      let parsed = await sp(file.contents)
 
       // parser(file.contents as Buffer, configObj, function(err:any, linesArray : []){
       //   // this callback function runs when the parser finishes its work, returning an array parsed lines 
@@ -98,9 +99,8 @@ const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb
       //     }
       //   }
       //   let data:string = resultArray.join('\n')
-
-        file.contents = Buffer.from(data)
-        
+        let parsedMail = createRecord(parsed, "BufferModeStream")
+        file.contents = Buffer.from(JSON.stringify(parsedMail))
         // we are done with file processing. Pass the processed file along
         log.debug('calling callback')    
         cb(returnErr, file);    
@@ -109,7 +109,7 @@ const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb
     }
     else if (file.isStream()) {
       file.contents = file.contents
-        .pipe(parser)
+        //.pipe(parser)
         .on('end', function () {
 
           // DON'T CALL THIS HERE. It MAY work, if the job is small enough. But it needs to be called after the stream is SET UP, not when the streaming is DONE.
