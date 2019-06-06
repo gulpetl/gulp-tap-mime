@@ -7,7 +7,8 @@ import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 
-const parse = require('csv-parse')
+import {parseItem} from '../src/parse-mime'
+import * as tapTypes from './singer/tap-types'
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject:Object, streamName: string) : any {
@@ -17,7 +18,7 @@ function createRecord(recordObject:Object, streamName: string) : any {
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-export function tapCsv(configObj: any) {
+export function tapMime(configObj: tapTypes.allConfigs) {
   if (!configObj) configObj = {}
   if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
 
@@ -26,8 +27,9 @@ export function tapCsv(configObj: any) {
   const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
     const self = this
     let returnErr: any = null
-    const parser = parse(configObj)
-
+    let parser:any
+    parser = parseItem(configObj)
+  
     // post-process line object
     const handleLine = (lineObj: any, _streamName : string): object | null => {
       if (parser.options.raw || parser.options.info) {
@@ -76,7 +78,7 @@ export function tapCsv(configObj: any) {
     else if (file.isBuffer()) {
 
 
-      parse(file.contents as Buffer, configObj, function(err:any, linesArray : []){
+      parser(file.contents as Buffer, configObj, function(err:any, linesArray : []){
         // this callback function runs when the parser finishes its work, returning an array parsed lines 
         let tempLine: any
         let resultArray = [];
@@ -114,7 +116,7 @@ export function tapCsv(configObj: any) {
           // cb(returnErr, file);
           // log.debug('calling callback')    
 
-          log.debug('csv parser is done')
+          log.debug('mime parser is done')
         })
         // .on('data', function (data:any, err: any) {
         //   log.debug(data)

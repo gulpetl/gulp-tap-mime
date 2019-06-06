@@ -1,5 +1,5 @@
 let gulp = require('gulp')
-import { tapCsv } from '../src/plugin'
+import { tapMime } from '../src/plugin'
 
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger('gulpfile')
@@ -24,10 +24,10 @@ function switchToBuffer(callback: any) {
   callback();
 }
 
-function runTapCsv(callback: any) {
+function runTapMime(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
-  return gulp.src('../testdata/*.csv',{buffer:gulpBufferMode})
+  return gulp.src('../testdata/*.eml',{buffer:gulpBufferMode})
     .pipe(errorHandler(function(err:any) {
       log.error('Error: ' + err)
       callback(err)
@@ -35,7 +35,7 @@ function runTapCsv(callback: any) {
     .on('data', function (file:Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })    
-    .pipe(tapCsv({raw:true/*, info:true */}))
+    .pipe(tapMime({raw:true/*, info:true */}))
     .pipe(rename({
       extname: ".ndjson",
     }))      
@@ -50,18 +50,18 @@ function runTapCsv(callback: any) {
 
 }
 
-export function csvParseWithoutGulp(callback: any) {
+export function ParseWithoutGulp(callback: any) {
 
-  const parse = require('csv-parse')
+  const parse = require('parse-mime')
 
   var parser = parse({delimiter: ',', columns:true});
   
-  require('fs').createReadStream('../testdata/cars.csv').pipe(parser)
+  require('fs').createReadStream('../testdata/test.eml').pipe(parser)
   .on("data",(data:any)=>{
     console.log(data)
   });
   
 }
 
-exports.default = gulp.series(runTapCsv)
-exports.runTapCsvBuffer = gulp.series(switchToBuffer, runTapCsv)
+exports.default = gulp.series(runTapMime)
+exports.runTapMimeBuffer = gulp.series(switchToBuffer, runTapMime)
