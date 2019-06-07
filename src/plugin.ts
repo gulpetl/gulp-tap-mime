@@ -10,6 +10,8 @@ log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 import * as mailparser from 'mailparser'
 //var mp = mailparser.MailParser; // low-level parser
 var sp = mailparser.simpleParser // higher-level parser (easier to use, not as efficient)
+const MailParser = require('mailparser').MailParser;
+
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject:Object, streamName: string) : any {
@@ -32,19 +34,19 @@ const strm = through2.obj(
     // let parser:any
     // parser = parseItem(configObj)
   
-    // // post-process line object
-    // const handleLine = (lineObj: any, _streamName : string): object | null => {
-    //   if (parser.options.raw || parser.options.info) {
-    //     let newObj = createRecord(lineObj.record, _streamName)
-    //     if (lineObj.raw) newObj.raw = lineObj.raw
-    //     if (lineObj.info) newObj.info = lineObj.info
-    //     lineObj = newObj
-    //   }
-    //   else {
-    //     lineObj = createRecord(lineObj, _streamName)
-    //   }
-    //   return lineObj
-    // }
+    // post-process line object
+    const handleFile = (lineObj: any, _streamName : string): object | null => {
+      // if (parser.options.raw || parser.options.info) {
+        let newObj = createRecord(lineObj, _streamName)
+        // if (lineObj.raw) newObj.raw = lineObj.raw
+        // if (lineObj.info) newObj.info = lineObj.info
+        lineObj = newObj
+      // }
+      // else {
+      //   lineObj = createRecord(lineObj, _streamName)
+      // }
+      return lineObj
+    }
 
     function newTransformer(streamName : string) {
 
@@ -54,11 +56,11 @@ const strm = through2.obj(
       transformer._transform = function (dataObj: Object, encoding: string, callback: Function) {
         let returnErr: any = null
         try {
-          let handledObj //= handleLine(dataObj, streamName)
+          let handledObj = handleFile(dataObj, streamName)
           if (handledObj) {
-            let handledLine = JSON.stringify(handledObj)
-            log.debug(handledLine)
-            this.push(handledLine + '\n');
+            let handledFile = JSON.stringify(handledObj)
+            log.debug(handledFile)
+            this.push(handledFile + '\n');
           }
         } catch (err) {
           returnErr = new PluginError(PLUGIN_NAME, err);
@@ -109,24 +111,24 @@ const strm = through2.obj(
     }
     else if (file.isStream()) {
       file.contents = file.contents
-        //.pipe(parser)
-        .on('end', function () {
+      .pipe(new MailParser(file.contents))
+      .on('end', function () {
 
           // DON'T CALL THIS HERE. It MAY work, if the job is small enough. But it needs to be called after the stream is SET UP, not when the streaming is DONE.
           // Calling the callback here instead of below may result in data hanging in the stream--not sure of the technical term, but dest() creates no file, or the file is blank
           // cb(returnErr, file);
           // log.debug('calling callback')    
 
-          log.debug('mime parser is done')
-        })
+        log.debug('mime parser is done')
+      })
         // .on('data', function (data:any, err: any) {
         //   log.debug(data)
         // })
-        .on('error', function (err: any) {
-          log.error(err)
-          self.emit('error', new PluginError(PLUGIN_NAME, err));
-        })
-        .pipe(newTransformer(streamName))
+      .on('error', function (err: any) {
+        log.error(err)
+        self.emit('error', new PluginError(PLUGIN_NAME, err));
+      })
+      .pipe(newTransformer(streamName))
 
       // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')    
