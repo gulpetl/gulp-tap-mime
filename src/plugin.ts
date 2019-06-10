@@ -11,6 +11,7 @@ import * as mailparser from 'mailparser'
 //var mp = mailparser.MailParser; // low-level parser
 var sp = mailparser.simpleParser // higher-level parser (easier to use, not as efficient)
 const MailParser = require('mailparser').MailParser;
+const StreamParser = require('./streamParser')
 
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
@@ -111,7 +112,8 @@ const strm = through2.obj(
     }
     else if (file.isStream()) {
       file.contents = file.contents
-      .pipe(new MailParser(file.contents))
+      .pipe(new StreamParser(file.contents))
+      
       .on('end', function () {
 
           // DON'T CALL THIS HERE. It MAY work, if the job is small enough. But it needs to be called after the stream is SET UP, not when the streaming is DONE.
@@ -129,7 +131,6 @@ const strm = through2.obj(
         self.emit('error', new PluginError(PLUGIN_NAME, err));
       })
       .pipe(newTransformer(streamName))
-
       // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')    
       cb(returnErr, file);
