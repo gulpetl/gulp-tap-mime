@@ -13,7 +13,6 @@ This is a **[gulp-etl](https://gulpetl.com/)** plugin, and as such it is a [gulp
 {"type": "STATE", "value": {"users": 2, "locations": 1}}
 ```
 
-///CHANGE THIS
 ### Usage
 **gulp-etl** plugins accept a configObj as the first parameter; the configObj
 will contain any info the plugin needs. For this plugin the configObj is the "options" object (OPTIONAL) for [mailparser](https://nodemailer.com/extras/mailparser/)
