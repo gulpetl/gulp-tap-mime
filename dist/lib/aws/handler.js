@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Vinyl = require("vinyl");
-const plugin_1 = require("../plugin");
+//import { tapCsv } from '../plugin';
 const from2 = require('from2');
 class lambdaResponse {
     constructor() {
@@ -42,24 +42,23 @@ function doParse(event, context, callback) {
             });
         }
         let result = '';
-        try {
-            from2.obj([file]).pipe(plugin_1.tapCsv({}))
-                .on('data', function (data) {
-                console.log(data.contents.toString());
-                result += JSON.stringify(data) + '\n';
-            })
-                .on('error', function (err) {
-                response.body = JSON.stringify(file);
-                callback(err, response);
-            })
-                .on('end', function () {
-                response.body = result;
-                callback(null, response);
-            });
-        }
-        catch (err) {
-            callback(err, response);
-        }
+        //   try{
+        //     from2.obj([file]).pipe(tapCsv({}))
+        //     .on('data', function(data:any){
+        //       console.log(data.contents.toString())
+        //       result+= JSON.stringify(data)+'\n';
+        //     })
+        //     .on('error', function(err:any){
+        //       response.body = JSON.stringify(file)
+        //       callback(err,response);
+        //     })
+        //     .on('end', function(){
+        //       response.body = result;
+        //       callback(null,response);
+        //     })
+        //   }catch(err){
+        //     callback(err,response)
+        //   }
     });
 }
 exports.doParse = doParse;
