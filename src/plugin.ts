@@ -8,10 +8,12 @@ const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on th
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 
 import * as mailparser from 'mailparser'
+import { Stream } from 'stream';
 //var mp = mailparser.MailParser; // low-level parser
 var sp = mailparser.simpleParser // higher-level parser (easier to use, not as efficient)
 const MailParser = require('mailparser').MailParser;
 const StreamParser = require('./streamParser')
+var Readable = require('stream').Readable
 
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
@@ -111,8 +113,10 @@ const strm = through2.obj(
 
     }
     else if (file.isStream()) {
+      let parsed = await sp(file.contents)
+      let parsedMail = createRecord(parsed, "ModeStream")
       file.contents = file.contents
-      .pipe(new StreamParser(file.contents))
+      .pipe(parsedMail)
       
       .on('end', function () {
 
@@ -134,6 +138,8 @@ const strm = through2.obj(
       // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')    
       cb(returnErr, file);
+
+       
     }
 
   })
