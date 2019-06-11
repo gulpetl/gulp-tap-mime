@@ -33,21 +33,25 @@ const strm = through2.obj(
       // return empty file
       return cb(returnErr, file)
     }
+
     else if (file.isBuffer()) {
       let parsed = await sp(file.contents)
-        let parsedMail = createRecord(parsed, "BufferModeStream")
-        file.contents = Buffer.from(JSON.stringify(parsedMail))
-        // we are done with file processing. Pass the processed file along
-        log.debug('calling callback')    
-        cb(returnErr, file);    
+      let parsedMail = createRecord(parsed, "TapMimeBufferMode")
+      file.contents = Buffer.from(JSON.stringify(parsedMail))
+      // we are done with file processing. Pass the processed file along
+      log.debug('calling callback')    
+      cb(returnErr, file);    
     }
+
     else if (file.isStream()) {
       let parsed = await sp(file.contents)
-      let parsedMail = createRecord(parsed, "ModeStream")
+      let parsedMail = createRecord(parsed, "TapMimeStreamMode")
       file.contents = string_to_strm(JSON.stringify(parsedMail));
+      // we are done with file processing. Pass the processed file along
       log.debug('calling callback')    
       cb(returnErr, file);
     }
+    
   })
 
   return strm
