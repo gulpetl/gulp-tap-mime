@@ -1,5 +1,5 @@
 import Vinyl = require('vinyl');
-import { tapCsv } from '../plugin';
+//import { tapCsv } from '../plugin';
 const from2 = require('from2');
 
 class lambdaResponse {
@@ -32,21 +32,21 @@ export async function doParse(event:any, context:any, callback:any){
   }
 
   let result:string = '';
-  try{
-    from2.obj([file]).pipe(tapCsv({}))
-    .on('data', function(data:any){
-      console.log(data.contents.toString())
-      result+= JSON.stringify(data)+'\n';
-    })
-    .on('error', function(err:any){
-      response.body = JSON.stringify(file)
-      callback(err,response);
-    })
-    .on('end', function(){
-      response.body = result;
-      callback(null,response);
-    })
-  }catch(err){
-    callback(err,response)
-  }
-}
+//   try{
+//     from2.obj([file]).pipe(tapCsv({}))
+//     .on('data', function(data:any){
+//       console.log(data.contents.toString())
+//       result+= JSON.stringify(data)+'\n';
+//     })
+//     .on('error', function(err:any){
+//       response.body = JSON.stringify(file)
+//       callback(err,response);
+//     })
+//     .on('end', function(){
+//       response.body = result;
+//       callback(null,response);
+//     })
+//   }catch(err){
+//     callback(err,response)
+//   }
+ }
