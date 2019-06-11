@@ -35,7 +35,7 @@ function runTapMime(callback: any) {
     .on('data', function (file:Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })    
-    .pipe(tapMime({}))
+    .pipe(tapMime({}))  
     .pipe(rename({
       extname: ".ndjson",
     }))      
