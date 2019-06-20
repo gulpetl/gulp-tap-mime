@@ -29,6 +29,36 @@ const strm = through2.obj(
   async function (this: any, file: Vinyl, encoding: string, cb: Function) {
     let returnErr: any = null
 
+    function convertor(MailObject:any) {
+      //for headers
+        MailObject.headers = MailObject.headerLines
+        delete MailObject.headerLines
+        for (var i = 0; i < MailObject.headers.length; i++) {
+          //MailObject.headers[i].key = ""
+          var index = MailObject.headers[i].line.indexOf(":");
+          var NewKeyValue = MailObject.headers[i].line.slice(0,index)
+          MailObject.headers[i].key = NewKeyValue
+          MailObject.headers[i].line = MailObject.headers[i].line.slice(index+2,)
+          MailObject.headers[i].value = MailObject.headers[i].line
+          delete MailObject.headers[i].line
+        }
+        //for attachments
+        let attachmentIdx = Object.keys(MailObject).indexOf("attachments")
+        if(attachmentIdx > -1 && MailObject.attachments.length > 0) {
+          for(var i = 0; i < MailObject.attachments.length; i++) {
+            MailObject.attachments[i].content = Buffer.from(MailObject.attachments[i].content.data,'utf-8')
+          }
+        }
+  
+      //for from 
+        MailObject.from = MailObject.from.value
+        
+      //for to
+        MailObject.to = MailObject.to.value
+      }
+  
+      
+
     if (file.isNull()) {
       // return empty file
       return cb(returnErr, file)
@@ -37,6 +67,7 @@ const strm = through2.obj(
     else if (file.isBuffer()) {
       let parsed = await sp(file.contents)
       let parsedMail = createRecord(parsed, "TapMimeBufferMode")
+      convertor(parsedMail.record)
       file.contents = Buffer.from(JSON.stringify(parsedMail))
       // we are done with file processing. Pass the processed file along
       log.debug('calling callback')    
@@ -46,6 +77,7 @@ const strm = through2.obj(
     else if (file.isStream()) {
       let parsed = await sp(file.contents)
       let parsedMail = createRecord(parsed, "TapMimeStreamMode")
+      convertor(parsedMail.record)
       file.contents = string_to_strm(JSON.stringify(parsedMail));
       // we are done with file processing. Pass the processed file along
       log.debug('calling callback')    
