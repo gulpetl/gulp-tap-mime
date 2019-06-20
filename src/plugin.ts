@@ -46,7 +46,7 @@ const strm = through2.obj(
         let attachmentIdx = Object.keys(MailObject).indexOf("attachments")
         if(attachmentIdx > -1 && MailObject.attachments.length > 0) {
           for(var i = 0; i < MailObject.attachments.length; i++) {
-            MailObject.attachments[i].content = Buffer.from(MailObject.attachments[i].content.data,'utf-8')
+            MailObject.attachments[i].content = MailObject.attachments[i].content.toString()
           }
         }
   
