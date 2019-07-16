@@ -28,6 +28,8 @@ export function tapMime(configObj: any) {
 const strm = through2.obj(
   async function (this: any, file: Vinyl, encoding: string, cb: Function) {
     let returnErr: any = null
+    const self = this
+
 
     function convertor(MailObject:any) {
       //for headers
@@ -43,19 +45,21 @@ const strm = through2.obj(
           delete MailObject.headers[i].line
         }
         //for attachments
-        let attachmentIdx = Object.keys(MailObject).indexOf("attachments")
-        if(attachmentIdx > -1 && MailObject.attachments.length > 0) {
-          for(var i = 0; i < MailObject.attachments.length; i++) {
-            MailObject.attachments[i].content = MailObject.attachments[i].content.toString()
-          }
-        }
+        // let attachmentIdx = Object.keys(MailObject).indexOf("attachments")
+        // if(attachmentIdx > -1 && MailObject.attachments.length > 0) {
+        //   for(var i = 0; i < MailObject.attachments.length; i++) {
+        //     MailObject.attachments[i].content = MailObject.attachments[i].content.toString()
+        //   }
+        // }
   
       //for from 
         MailObject.from = MailObject.from.value
         
       //for to
         MailObject.to = MailObject.to.value
-      }
+
+        return MailObject.attachments
+    }
   
       
 
@@ -67,9 +71,38 @@ const strm = through2.obj(
     else if (file.isBuffer()) {
       let parsed = await sp(file.contents)
       let parsedMail = createRecord(parsed, "TapMimeBufferMode")
-      convertor(parsedMail.record)
+      let contents: string = '';
+      let attachments:any = convertor(parsedMail.record)
+
+      if(attachments) {
+        if(Array.isArray(attachments)) {
+          for(var i = 0; i < attachments.length; i++) {
+            contents += attachments[i].content.toString()
+          }
+        }
+        else {
+          contents = attachments.content.toString()
+        }
+      }
+
       file.contents = Buffer.from(JSON.stringify(parsedMail))
       // we are done with file processing. Pass the processed file along
+      if(contents.length > 0){
+        if(Array.isArray(attachments)) {
+          for(var i = 0; i < attachments.length; i++) {
+            self.push(new Vinyl({
+              path: 'attachments' + i.toString() + '.txt',
+              contents: Buffer.from(contents)
+            }))
+          } 
+        }
+        else if(attachments) {
+          self.push(new Vinyl({
+            path: 'attachments' + '.txt',
+            contents: Buffer.from(contents)
+          }))
+        }
+      }
       log.debug('calling callback')    
       cb(returnErr, file);    
     }
