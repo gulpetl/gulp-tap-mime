@@ -8,7 +8,6 @@ log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 // const pluginLog = loglevel.getLogger(PLUGIN_NAME)
 // pluginLog.setLevel('debug')
 
-import * as rename from 'gulp-rename'
 const errorHandler = require('gulp-error-handle'); // handle all errors in one handler, but still stop the stream if there are errors
 
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
@@ -35,10 +34,7 @@ function runTapMime(callback: any) {
     .on('data', function (file:Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })    
-    .pipe(tapMime({}))  
-    .pipe(rename({
-      extname: ".ndjson",
-    }))      
+    .pipe(tapMime({ResendableJSON: true, ExtractAttachments: true}))       
     .pipe(gulp.dest('../testdata/processed'))
     .on('data', function (file:Vinyl) {
       log.info('Finished processing on ' + file.basename)

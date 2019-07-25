@@ -15,7 +15,11 @@ This is a **[gulp-etl](https://gulpetl.com/)** plugin, and as such it is a [gulp
 
 ### Usage
 **gulp-etl** plugins accept a configObj as the first parameter; the configObj
-will contain any info the plugin needs. For this plugin the configObj is the "options" object (OPTIONAL) for [mailparser](https://nodemailer.com/extras/mailparser/)
+will contain any info the plugin needs. For this plugin the configObj can have three options which may ne true or false:
+    * keepCidLinks: boolean - optionally choosing if the embeded links in images are to be kept or not. If its true it will keep cidLinks and if its false, it will get rid of them, defaults to true
+    * ResendableJSON: boolean - optionally choosing if you want to resend the email/forward it, so it gets changed to the format of Mail Composing System and run a convertor to do that. If its true it will run the convertor and if its false, it will not run the convertor, defaults to false
+    * ExtractAttachments: boolean - optionally choosing if the attachments coming in are reurned as separate files or stored in the JSON object and passed on in the gulpStream. If its true it will save the files and take the attachment object out of the JSON object and if its false, it will not save the files and keep the attachment object in the JSON object, defaults to true
+
 
 ##### Sample gulpfile.js
 ```
