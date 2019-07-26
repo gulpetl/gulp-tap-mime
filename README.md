@@ -14,7 +14,7 @@ The configObj will contain any info the plugin needs. For this plugin the config
 
 ##### Sample gulpfile.js
 ```
-/* parse all .MIME files in a folder into Message Stream files in a different folder */
+/* parse all .MIME files in a folder into JSON files in a different folder */
 
 let gulp = require('gulp')
 var tapMime = require('gulp-etl-tap-mime').tapMime
