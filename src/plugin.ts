@@ -10,8 +10,8 @@ log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 import * as mailparser from 'mailparser'
 var sp = mailparser.simpleParser // higher-level parser (easier to use, not as efficient)
 var string_to_strm = require('string-to-stream')
-import * as fs from 'fs'
 import replaceExt = require('replace-ext')
+
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject:Object, streamName: string) : any {
