@@ -1,7 +1,7 @@
 # gulp-tap-mime #
 
 This is a [gulp](https://gulpjs.com/) plugin.
-This plugin converts MIME (Email) files to **JSON files**. It is a **gulp** wrapper for [mailparser](https://nodemailer.com/extras/mailparser/).
+This plugin converts **MIME (Email) files** to **JSON files**. It is a **gulp** wrapper for [mailparser](https://nodemailer.com/extras/mailparser/).
 
 ### Usage
 The configObj will contain any info the plugin needs. For this plugin the configObj can have three options which may ne true or false:
